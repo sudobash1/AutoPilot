@@ -22,12 +22,14 @@ CPPFLAGS := $(INC_FLAGS) -MMD -MP
 
 # The final build step.
 $(BIN_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
+	# Undo all changes if the link fails. Obviously those changes were bad.
+	$(CXX) $(OBJS) -o $@ $(LDFLAGS) || git restore .
 
 # Build step for C++ source
 $(BIN_DIR)/%.cpp.o: %.cpp
 	mkdir -p $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	# Undo changes to the file if compilation fails. Let's just get back to a working state.
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ || git restore $<
 
 clean:
 	git clean -fdx .
